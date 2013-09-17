@@ -1,0 +1,84 @@
+'''general setup
+
+
+import QSTK.qstkutil.qsdateutil as du
+import QSTK.qstkutil.tsutil as tsu
+import QSTK.qstkutil.DataAccess as da
+
+import datetime as dt
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
+
+
+
+
+#function to return optimized sharpe ratio
+
+
+
+	def sharpe(cum_daily, k, stdev):
+		return k*cum_daily/stdev
+
+	#cumulative return
+	def cum_daily_return(array):
+		value=[1,1,1,1]
+		for j in range(0,len(array[0])-1):
+			for i in range(len(array)-1, 0, -1):
+				value[j] = value[j]*(array[i][j]/array[i-1][j])
+		return value
+
+
+def simulate(startdate, enddate, symbols, alloc):
+	ls_symbols = symbols
+	dt_start = startdate
+	dt_end = enddate
+	dt_timeofday = dt.timedelta(hours=16)
+	ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
+	import math as math
+	k=math.sqrt(252)
+	c_dataobj = da.DataAccess('Yahoo')
+	ls_keys = ['open', 'high', 'low', 'close', 'volume', 'actual_close']
+	ldf_data = c_dataobj.get_data(ldt_timestamps, ls_symbols, ls_keys)
+	start_money=100000
+	d_data = dict(zip(ls_keys, ldf_data))
+	na_price = d_data['close'].values
+	start_price = na_price[0,:]
+	print "start price: " 
+	print start_price
+	print "end price:"
+	print na_price[len(na_price)-1,:]
+	shares_bought=[0,0,0,0]
+	for i in range(0,len(na_price[0]-1)):
+		shares_bought[i] = start_money*alloc[i]/start_price[i]
+	print shares_bought
+	na_price_norm = na_price / na_price[0,:]
+	stdev=np.std(na_price_norm)
+	print "Standard deviation : " 
+	print stdev
+	average=np.average(na_price_norm)-1
+	print "average : "+ str(average)
+	cum_return=cum_daily_return(na_price)
+	print cum_return
+	weight_return=0
+	print cum_return
+	print alloc
+	for i in range(0,len(na_price-1)):
+		weight_return = weight_return + cum_return[i]*alloc[i]
+	print weight_return
+	s_ratio=sharpe(weight_return,k,stdev)
+	return s_ratio, stdev, average, weight_return
+	
+	
+
+vol, daily_ret, sharepe, cumu_return = simulate(dt.datetime(2010,1,1), dt.datetime(2010,12,31), ['GOOG','AAPL','GLD','XOM'], [0.1,0.2,0.3,0.4])
+
+
+	
+
+
+
+
+
+
