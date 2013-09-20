@@ -1,0 +1,111 @@
+#general setup
+
+
+import QSTK.qstkutil.qsdateutil as du
+import QSTK.qstkutil.tsutil as tsu
+import QSTK.qstkutil.DataAccess as da
+
+import datetime as dt
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+
+
+
+
+
+#function to return optimized sharpe ratio
+
+
+def sharpe(cum_daily, k, stdev):
+	return cum_daily*k/(stdev)
+
+	#cumulative return
+def cum_daily_return(array):
+	value=[]
+	for i in range(len(array)-1, 0, -1):
+		value.append(array[i]/array[i-1])
+	return value
+
+
+def simulate(startdate, enddate, symbols, alloc):
+	ls_symbols = symbols
+	dt_start = startdate
+	dt_end = enddate
+	dt_timeofday = dt.timedelta(hours=16)
+	ldt_timestamps = du.getNYSEdays(dt_start, dt_end, dt_timeofday)
+	import math as math
+	days=252
+	k=math.sqrt(days)
+	c_dataobj = da.DataAccess('Yahoo')
+	ls_keys = ['open', 'high', 'low', 'close', 'volume', 'actual_close']
+	ldf_data = c_dataobj.get_data(ldt_timestamps, ls_symbols, ls_keys)
+	d_data = dict(zip(ls_keys, ldf_data))
+	na_price = d_data['close'].values
+	#
+	start_price = na_price[0,:]
+	#
+	#
+	na_price_norm = na_price / na_price[0,:]
+	#
+	na_price_norm_weight = na_price_norm*alloc
+	#
+	returns=[]
+	for j in range(0, len(na_price)):
+		returns.append(sum(na_price_norm_weight[j]))
+	#
+	daily_returns=cum_daily_return(returns)
+	stdev=np.std(daily_returns)
+	avgdaily_return=np.average(daily_returns)-1
+	weight_return=0
+	cumreturn=returns[len(returns)-1]
+	s_ratio=sharpe(avgdaily_return,k,stdev)
+	return stdev, avgdaily_return, s_ratio, cumreturn
+
+def output():
+	print "Volatility :",
+	print vol
+	print "Average Daily return: ",
+	print daily_ret
+	print "Sharpe Ratio: ",
+	print sharepe
+	print "Cumulative return : ",
+	print  cumu_return
+	
+!!! Queries to main simulation
+vol, daily_ret, sharepe, cumu_return = simulate(dt.datetime(2010,1,1), dt.datetime(2010,12,31), ['AXP','HPQ','IBM','HNZ'], [0.0,0.0,0.0,1.0])
+print vol,daily_ret, sharepe, cumu_return		
+	
+
+vol, daily_ret, sharepe, cumu_return = simulate(dt.datetime(2011,1,1), dt.datetime(2011,12,31), ['AAPL','GLD','GOOG','XOM'], [0.4,0.4,0.0,0.2])
+!!!end queries to main simulation
+
+#Output formatting
+def output():
+	print "Volatility :",
+	print vol
+	print "Average Daily return: ",
+	print daily_ret
+	print "Sharpe Ratio: ",
+	print sharepe
+	print "Cumulative return : ",
+	print  cumu_return
+
+
+def simulateall(start,end,symbols):
+	max_sharpe=0
+	optimal=[]
+	for i in np.arange(0.0,1.1,0.1):
+		for j in np.arange(0.0,1.1,0.1):
+			for k in np.arange(0.0,1.1,0.1):
+				for l in np.arange(0.0,1.1,0.1):
+					if i+j+k+l==1:
+						array=[i,j,k,l]
+						vol, daily, sharpe, cumu_return = simulate(start,end,symbols,array)
+						print sharpe
+						if sharpe > max_sharpe:
+							max_sharpe=sharpe
+							optimal=array
+	print max_sharpe
+	print optimal		
