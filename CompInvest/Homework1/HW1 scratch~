@@ -1,4 +1,4 @@
-#general setup
+'''general setup
 
 
 import QSTK.qstkutil.qsdateutil as du
@@ -8,7 +8,6 @@ import QSTK.qstkutil.DataAccess as da
 import datetime as dt
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 
 
@@ -18,16 +17,17 @@ import numpy as np
 #function to return optimized sharpe ratio
 
 
-def sharpe(cum_daily, k, stdev):
-	return cum_daily/(k*stdev)
+
+	def sharpe(cum_daily, k, stdev):
+		return k*cum_daily/stdev
 
 	#cumulative return
-def cum_daily_return(array):
-	value=[1,1,1,1]
-	for j in range(0,len(array[0])):
-		for i in range(len(array)-1, 0, -1):
-			value[j] = value[j]*(array[i][j]/array[i-1][j])
-	return value
+	def cum_daily_return(array):
+		value=[1,1,1,1]
+		for j in range(0,len(array[0])-1):
+			for i in range(len(array)-1, 0, -1):
+				value[j] = value[j]*(array[i][j]/array[i-1][j])
+		return value
 
 
 def simulate(startdate, enddate, symbols, alloc):
@@ -54,33 +54,27 @@ def simulate(startdate, enddate, symbols, alloc):
 		shares_bought[i] = start_money*alloc[i]/start_price[i]
 	print shares_bought
 	na_price_norm = na_price / na_price[0,:]
-	print na_price_norm
-	na_price_norm_weight = na_price_norm/ alloc[0,:]
-	cumulative_return=sum(na_price_norm_weight[len(na_price)])
 	stdev=np.std(na_price_norm)
 	print "Standard deviation : " 
 	print stdev
 	average=np.average(na_price_norm)-1
 	print "average : "+ str(average)
-	cum_return=cum_daily_return(na_price_norm)
+	cum_return=cum_daily_return(na_price)
 	print cum_return
 	weight_return=0
 	print cum_return
 	print alloc
-	print len(na_price[0])
-	for i in range(0,len(na_price[0])):
+	for i in range(0,len(na_price-1)):
 		weight_return = weight_return + cum_return[i]*alloc[i]
 	print weight_return
 	s_ratio=sharpe(weight_return,k,stdev)
-	return stdev, weight_return, s_ratio, average
+	return s_ratio, stdev, average, weight_return
 	
 	
 
 vol, daily_ret, sharepe, cumu_return = simulate(dt.datetime(2010,1,1), dt.datetime(2010,12,31), ['GOOG','AAPL','GLD','XOM'], [0.1,0.2,0.3,0.4])
-print vol,daily_ret, sharepe, cumu_return
 
 
-vol, daily_ret, sharepe, cumu_return = simulate(dt.datetime(2010,1,1), dt.datetime(2010,12,31), ['AXP','HPQ','IBM','HNZ'], [0.0,0.0,0.0,1.0])
 	
 
 
